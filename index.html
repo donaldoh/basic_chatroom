@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>513 Assignment 3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@1,400;1,700&family=Catamaran:wght@100&family=Comforter&family=Noto+Sans+SC:wght@100&family=Quicksand:wght@300;400;600&family=Syne+Tactile&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+
+      *{
+        margin: 0; padding: 0; box-sizing: border-box;
+
+      }
+      body {
+        background-color: #6e8898;
+        font-family: 'Cabin', sans-serif;
+        margin: 0; padding-bottom: 3rem; 
+      }
+      #form { background: rgba(0, 0, 0, 0.15);
+        padding: 0.25rem;
+        left: 0; right: 0; 
+        display: flex; 
+        height: 3.5rem; 
+        box-sizing: border-box; 
+        backdrop-filter: 
+        blur(10px); 
+      }
+            
+      /* display name of current user*/
+      #user_info{
+        font-size: 30px;
+        color: #e7ecef;
+        font-weight: bold;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        text-align: center;
+
+      }
+
+      #container {
+        margin: auto;
+        width: 85%;
+        height: 83vh;
+        background-color: #6e8898;
+      }
+      
+      /* messages section */
+      #message_section {
+        position: relative;
+        float: left;
+        width: 85%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-wrap: break-word;
+        background-color:#9fb1bc;
+        border: solid 7px #d3d0cb;
+      }
+
+      #message_content {
+          position: absolute;
+          bottom: 0;
+          max-height: 100%;
+          width: 100%;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column-reverse;
+      }
+
+      /* online users title*/
+      #user_title{
+        text-decoration: underline;
+        font-size: 20px;
+        font-weight: bold;
+        padding-top: 10px;
+        padding-bottom: 5px;
+        color: white;
+      }
+
+      /* list of users section*/
+      #user_section {
+          text-align: center;
+          height: 100%;
+          width: 15%;
+          overflow-y: auto;
+          background-color: #9fb1bc;
+          overflow-wrap: break-word;
+          border:solid #d3d0cb;
+          border-width: 7px 7px 7px 0px;
+        }
+
+      #users li { 
+          padding: 5px; 
+      }
+
+
+      #input { border: none; 
+        padding: 0 1rem; 
+        flex-grow: 1; 
+        border-radius: 2rem; 
+        margin: 0.25rem; 
+      }
+      #input:focus { 
+        outline: none; 
+      }
+      #form > button { 
+        background: #333; 
+        border: none; 
+        padding: 0 1rem; 
+        margin: 0.25rem; 
+        border-radius: 3px; 
+        outline: none; 
+        color: #fff; 
+      }
+
+      #messages { 
+        list-style-type: none; 
+        margin: 0; 
+        padding: 0;
+       }
+      #messages > li { padding: 0.5rem 1rem; }
+
+
+    </style>
+  </head>
+  <body>
+
+    <div id="container">
+
+      <div id = "user_info">
+        <h1></h1>
+      </div>
+      
+      <div id="message_section">
+        <div id="message_content">
+          <ul id="messages"></ul>
+        </div>
+      </div>
+
+      <div id="user_section">
+        <p id="user_title">Currently Online </p>
+        <ul id="users"></ul>
+      </div>
+      
+      <form id="form" action="">
+        <input id="input" autocomplete="off" />
+        <button>Send</button>
+      </form>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // STARTER CODE https://socket.io/get-started/chat/ //
+      let client_name = "";
+      $(document).ready(function() {
+        var socket = io();
+        $('form').submit(function(){
+          socket.emit('chat message', $('#input').val());
+          const msg = $('#input').val();
+          if(msg.startsWith("/nick ")){
+            client_name = msg.substring(msg.indexOf(' ') + 1);        //https://stackoverflow.com/questions/573145/get-everything-after-the-dash-in-a-string-in-javascript/35236900 
+          }
+          $('#input').val('');
+          return false;
+      });
+      socket.on('chat message', function(msg) {
+        let msgString = "<p style=\"color:#" + msg.color + "\">" +  msg.name + " @" + msg.date + ": " + msg.message + "</p>";
+        if(msg.name === client_name){
+          msgString = "<b style=\"color:#" + msg.color + "\">" +  msg.name + " @" + msg.date + ": " + msg.message + "</b>";
+        }
+        $('#messages').append($('<li>').append(msgString));
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+      
+
+
+
+      //user list//
+      socket.on('user list', function(msg) {
+        $('#user_info').html("You are currently: " + client_name);
+
+        var addUser = "";
+        console.log(msg);
+        for (var i = 0; i < msg.length; i++){
+          addUser += '<li>' + msg[i].name + '</li>';
+        }
+        $('#users').html(addUser);
+      });      
+
+      client_name = prompt("What is your name? ");
+      if ((client_name == '') || (client_name == null)){  //if user didnt enter a name//
+        client_name = randomUsr();
+      }
+      socket.emit("new_user", client_name);
+
+      client_color = prompt("Enter hexcode color# (default black):");
+      socket.emit("new_color", client_color);      
+
+      
+    });
+
+      function randomUsr(){
+        let temp1 = ["Bruh", "Bird", "Jeff", "Tiger", "Crab", "Dog", "Sheep", "Lion", "Kangeroo", "Fish", "Kitty", "Duck", "Giraffe", "Husky", "Squid", "Cow"];
+        let temp2 = ["Fast", "Strong", "Big", "Small", "Tiny", "Giant", "Sleepy", "Tired", "Smart", "Funny", "Handsome", "Sugary" , "Chocolatey", "Syrupy", "Minty", "Calm", "Humble", "Arrogant", "Proud", "Cool", "Mean"];
+        let random1 = (Math.floor(Math.random() * temp1.length)); //https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array//
+        let random2 = (Math.floor(Math.random() * temp2.length));
+        
+        let rdmNum = (Math.floor(Math.random() * 100)); 
+
+      return (temp2[random2] + temp1[random1] +rdmNum);
+      }
+
+    </script> 
+  </body>
+</html>
