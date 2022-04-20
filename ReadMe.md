@@ -11,4 +11,3 @@ Change name: "/nick name"
 Change color: "/nickcolor hexnumber"
     - Default text color is black 
 # basic_chatroom
-# basic_chatroom
